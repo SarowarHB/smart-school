@@ -17,11 +17,6 @@ class RoleController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        return Inertia::render('Roles/Create');
-    }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -33,13 +28,6 @@ class RoleController extends Controller
         return redirect()
             ->route('roles.index')
             ->with('success', "Role \"{$validated['name']}\" created successfully.");
-    }
-
-    public function edit(Role $role)
-    {
-        return Inertia::render('Roles/Edit', [
-            'role' => $role,
-        ]);
     }
 
     public function update(Request $request, Role $role)

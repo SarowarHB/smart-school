@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/users/permissions',  fn () => inertia('Placeholder', ['title' => 'Permissions']))->name('users.permissions');
 
     // Roles CRUD — must be before any wildcard user routes
-    Route::resource('roles', RoleController::class)->except(['show']);
+    Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
     Route::get('/products',           fn () => inertia('Placeholder', ['title' => 'Products']))->name('products.index');
     Route::get('/products/categories',fn () => inertia('Placeholder', ['title' => 'Categories']))->name('products.categories');
     Route::get('/orders',             fn () => inertia('Placeholder', ['title' => 'Orders']))->name('orders.index');

@@ -1,25 +1,55 @@
 <script>
-  import { router } from '@inertiajs/svelte';
+  import { useForm, router } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
 
   let { roles } = $props();
 
-  let deleteTarget = $state(null);   // role being confirmed for deletion
-  let flash        = $state('');
+  // ── Delete ─────────────────────────────────────────────────────────────────
+  let deleteTarget = $state(null);
 
-  function confirmDelete(role) {
-    deleteTarget = role;
-  }
-
-  function cancelDelete() {
-    deleteTarget = null;
-  }
-
+  function confirmDelete(role) { deleteTarget = role; }
+  function cancelDelete()      { deleteTarget = null; }
   function doDelete() {
     if (!deleteTarget) return;
     router.delete(`/roles/${deleteTarget.id}`, {
       onSuccess: () => { deleteTarget = null; },
     });
+  }
+
+  // ── Create / Edit modal ────────────────────────────────────────────────────
+  let modalMode   = $state(null);   // 'create' | 'edit' | null
+  let editingRole = $state(null);
+
+  const form = useForm({ name: '' });
+
+  function openCreate() {
+    form.reset();
+    form.clearErrors();
+    modalMode   = 'create';
+    editingRole = null;
+  }
+
+  function openEdit(role) {
+    form.name = role.name;
+    form.clearErrors();
+    modalMode   = 'edit';
+    editingRole = role;
+  }
+
+  function closeModal() {
+    form.reset();
+    form.clearErrors();
+    modalMode   = null;
+    editingRole = null;
+  }
+
+  function submitForm(e) {
+    e.preventDefault();
+    if (modalMode === 'create') {
+      form.post('/roles', { onSuccess: () => closeModal() });
+    } else if (modalMode === 'edit' && editingRole) {
+      form.put(`/roles/${editingRole.id}`, { onSuccess: () => closeModal() });
+    }
   }
 </script>
 
@@ -36,14 +66,15 @@
         {roles.total} role{roles.total === 1 ? '' : 's'} total
       </p>
     </div>
-    <a href="/roles/create"
-       class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700
-              text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+    <button
+      onclick={openCreate}
+      class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700
+             text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
       New Role
-    </a>
+    </button>
   </div>
 
   <!-- Table card -->
@@ -64,25 +95,26 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
-          {#each roles.data as role}
+          {#each roles.data as role, index}
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors group">
               <td class="px-6 py-4 text-gray-400 dark:text-gray-500 font-mono text-xs">
-                {role.id}
+                {index + 1}
               </td>
               <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                 {role.name}
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center justify-end gap-2">
-                  <a href="/roles/{role.id}/edit"
-                     class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50
-                            dark:hover:bg-primary-900/20 dark:hover:text-primary-400 transition-colors"
-                     title="Edit">
+                  <button
+                    onclick={() => openEdit(role)}
+                    class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50
+                           dark:hover:bg-primary-900/20 dark:hover:text-primary-400 transition-colors"
+                    title="Edit">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
-                  </a>
+                  </button>
                   <button
                     onclick={() => confirmDelete(role)}
                     class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50
@@ -107,7 +139,7 @@
                     <circle cx="12" cy="12" r="3"/>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4"/>
                   </svg>
-                  No roles found. <a href="/roles/create" class="text-primary-500 hover:underline">Create one.</a>
+                  No roles found. <button onclick={openCreate} class="text-primary-500 hover:underline">Create one.</button>
                 </div>
               </td>
             </tr>
@@ -193,6 +225,79 @@
           Delete
         </button>
       </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Create / Edit modal -->
+{#if modalMode}
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      onclick={closeModal}
+      onkeydown={(e) => e.key === 'Escape' && closeModal()}
+      role="button"
+      tabindex="-1"
+      aria-label="Close"
+    ></div>
+    <div class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6
+                border border-gray-200 dark:border-gray-700 z-10">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-5">
+        {modalMode === 'create' ? 'Create Role' : 'Edit Role'}
+      </h3>
+
+      <form onsubmit={submitForm} novalidate>
+        <div class="mb-5">
+          <label for="modal-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Role Name <span class="text-red-500" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="modal-name"
+            type="text"
+            bind:value={form.name}
+            placeholder="e.g. Editor, Moderator"
+            class="w-full px-4 py-2.5 rounded-xl border text-sm
+                   bg-white dark:bg-gray-800
+                   text-gray-900 dark:text-white
+                   placeholder-gray-400 dark:placeholder-gray-500
+                   transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/40
+                   {form.errors.name
+                     ? 'border-red-400 dark:border-red-500'
+                     : 'border-gray-200 dark:border-gray-700 focus:border-primary-500 dark:focus:border-primary-500'}"
+            aria-describedby={form.errors.name ? 'modal-name-error' : undefined}
+          />
+          {#if form.errors.name}
+            <p id="modal-name-error" class="mt-1.5 text-xs text-red-500">{form.errors.name}</p>
+          {/if}
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button
+            onclick={closeModal}
+            type="button"
+            class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200
+                   dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50
+                   dark:hover:bg-gray-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={form.processing}
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700
+                   disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium
+                   rounded-xl transition-colors shadow-sm"
+          >
+            {#if form.processing}
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4z"/>
+              </svg>
+            {/if}
+            {modalMode === 'create' ? 'Create Role' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 {/if}
