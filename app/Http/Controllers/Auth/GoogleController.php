@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Account;
+use App\Models\Account\Account;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -25,16 +25,16 @@ class GoogleController extends Controller
 
         // Split display name into first / last
         $nameParts = explode(' ', $googleUser->getName(), 2);
-        $firstName  = $nameParts[0];
-        $lastName   = $nameParts[1] ?? '';
+        $firstName = $nameParts[0];
+        $lastName = $nameParts[1] ?? '';
 
         // Store the full Google profile so we can extract avatar etc.
         $profile = [
-            'id'      => $googleUser->getId(),
-            'name'    => $googleUser->getName(),
-            'email'   => $googleUser->getEmail(),
-            'avatar'  => $googleUser->getAvatar(),
-            'token'   => $googleUser->token,
+            'id' => $googleUser->getId(),
+            'name' => $googleUser->getName(),
+            'email' => $googleUser->getEmail(),
+            'avatar' => $googleUser->getAvatar(),
+            'token' => $googleUser->token,
         ];
 
         /** @var Account $account */
@@ -42,14 +42,14 @@ class GoogleController extends Controller
             // Match on the Google user-id stored in social_id
             ['social_id' => $googleUser->getId()],
             [
-                'first_name'            => $firstName,
-                'last_name'             => $lastName,
-                'email'                 => $googleUser->getEmail(),
-                'external_user_id'      => $googleUser->getId(),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $googleUser->getEmail(),
+                'external_user_id' => $googleUser->getId(),
                 'external_user_profile' => $profile,
-                'status'                => true,
+                'status' => true,
                 // 6 = Admin account type — change as needed
-                'account_type_id'       => 6,
+                'account_type_id' => 6,
             ]
         );
 

@@ -20,31 +20,31 @@ class SidebarComposer
         return [
             [
                 'label' => 'Main',
-                'type'  => 'group',
+                'type' => 'group',
                 'items' => [
                     [
                         'label' => 'Dashboard',
-                        'icon'  => 'layout-dashboard',
+                        'icon' => 'layout-dashboard',
                         'route' => 'dashboard',
-                        'href'  => '/dashboard',
+                        'href' => '/dashboard',
                     ],
                     [
                         'label' => 'Analytics',
-                        'icon'  => 'bar-chart-2',
+                        'icon' => 'bar-chart-2',
                         'route' => 'analytics',
-                        'href'  => '/analytics',
+                        'href' => '/analytics',
                     ],
                 ],
             ],
             [
                 'label' => 'Management',
-                'type'  => 'group',
+                'type' => 'group',
                 'items' => [
                     [
-                        'label'    => 'Users',
-                        'icon'     => 'users',
-                        'route'    => 'users.index',
-                        'href'     => '/users',
+                        'label' => 'Users',
+                        'icon' => 'users',
+                        'route' => 'users.index',
+                        'href' => '/users',
                         'children' => [
                             ['label' => 'All Users',   'href' => '/users',               'route' => 'users.index'],
                             ['label' => 'Roles',       'href' => '/roles',               'route' => 'roles.index'],
@@ -53,9 +53,9 @@ class SidebarComposer
                     ],
                     [
                         'label' => 'Products',
-                        'icon'  => 'package',
+                        'icon' => 'package',
                         'route' => 'products.index',
-                        'href'  => '/products',
+                        'href' => '/products',
                         'children' => [
                             ['label' => 'All Products', 'href' => '/products',          'route' => 'products.index'],
                             ['label' => 'Categories',   'href' => '/products/categories', 'route' => 'products.categories'],
@@ -63,57 +63,57 @@ class SidebarComposer
                     ],
                     [
                         'label' => 'Orders',
-                        'icon'  => 'shopping-cart',
+                        'icon' => 'shopping-cart',
                         'route' => 'orders.index',
-                        'href'  => '/orders',
+                        'href' => '/orders',
                     ],
                     [
                         'label' => 'Invoices',
-                        'icon'  => 'file-text',
+                        'icon' => 'file-text',
                         'route' => 'invoices.index',
-                        'href'  => '/invoices',
+                        'href' => '/invoices',
                     ],
                 ],
             ],
             [
                 'label' => 'Content',
-                'type'  => 'group',
+                'type' => 'group',
                 'items' => [
                     [
                         'label' => 'Pages',
-                        'icon'  => 'file',
+                        'icon' => 'file',
                         'route' => 'pages.index',
-                        'href'  => '/pages',
+                        'href' => '/pages',
                     ],
                     [
                         'label' => 'Media',
-                        'icon'  => 'image',
+                        'icon' => 'image',
                         'route' => 'media.index',
-                        'href'  => '/media',
+                        'href' => '/media',
                     ],
                 ],
             ],
             [
                 'label' => 'System',
-                'type'  => 'group',
+                'type' => 'group',
                 'items' => [
                     [
                         'label' => 'Settings',
-                        'icon'  => 'settings',
+                        'icon' => 'settings',
                         'route' => 'settings',
-                        'href'  => '/settings',
+                        'href' => '/settings',
                     ],
                     [
                         'label' => 'Reports',
-                        'icon'  => 'pie-chart',
+                        'icon' => 'pie-chart',
                         'route' => 'reports',
-                        'href'  => '/reports',
+                        'href' => '/reports',
                     ],
                     [
                         'label' => 'Activity Log',
-                        'icon'  => 'activity',
+                        'icon' => 'activity',
                         'route' => 'activity',
-                        'href'  => '/activity',
+                        'href' => '/activity',
                     ],
                 ],
             ],

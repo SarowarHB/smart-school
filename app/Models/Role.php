@@ -2,19 +2,27 @@
 
 namespace App\Models;
 
+use App\Models\Account\Role as AccountRole;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[Table('roles')]
+
+#[WithoutTimestamps]
+
+#[Fillable(['name'])]
 class Role extends Model
 {
-    protected $table = 'roles';
-    public $timestamps = false;
-
-    protected $fillable = ['name'];
-
-    public function accounts(): BelongsToMany
+    public function accountRoles(): HasMany
     {
-        return $this->belongsToMany(Account::class, 'account_roles', 'role_id', 'account_id')
-                    ->withPivot('is_active');
+        return $this->hasMany(AccountRole::class, 'role_id', 'id');
+    }
+
+    public function policies(): HasMany
+    {
+        return $this->hasMany(Policy::class, 'role_id', 'id');
     }
 }
