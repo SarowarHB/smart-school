@@ -2,14 +2,12 @@
 
 namespace App\View\Composers;
 
+use App\Models\Resource\Resource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class SidebarComposer
 {
-    /**
-     * Build and return the sidebar navigation tree.
-     * Each item may have children to form a nested/grouped menu.
-     */
     public function compose(View $view): void
     {
         $view->with('sidebarMenu', $this->menu());
@@ -17,91 +15,38 @@ class SidebarComposer
 
     public function menu(): array
     {
-        return [
-            [
-                'label' => 'Main',
+        $user = Auth::user();
+
+        if (! $user) {
+            return [];
+        }
+
+        $roleIds = $user->accountRoles()
+            ->where('is_active', true)
+            ->pluck('role_id');
+
+        if ($roleIds->isEmpty()) {
+            return [];
+        }
+
+        return Resource::whereHas('resourcesPolicies', function ($query) use ($roleIds) {
+            $query->where('is_active', true)
+                ->whereHas('accessPolicy', fn ($q) => $q->whereIn('role_id', $roleIds));
+        })
+            ->select('name', 'description', 'res_url')
+            ->distinct()
+            ->get()
+            ->groupBy('name')
+            ->map(fn ($items, $groupName) => [
+                'label' => $groupName,
                 'type' => 'group',
-                'items' => [
-                    [
-                        'label' => 'Dashboard',
-                        'icon' => 'layout-dashboard',
-                        'route' => 'dashboard',
-                        'href' => '/dashboard',
-                    ],
-                ],
-            ],
-            [
-                'label' => 'Management',
-                'type' => 'group',
-                'items' => [
-                    [
-                        'label' => 'Roles',
-                        'icon' => 'shield',
-                        'route' => 'roles.index',
-                        'href' => '/roles',
-                    ],
-                    [
-                        'label' => 'Actions',
-                        'icon' => 'zap',
-                        'route' => 'actions.index',
-                        'href' => '/actions',
-                    ],
-                    [
-                        'label' => 'Policies',
-                        'icon' => 'file-check',
-                        'route' => 'policies.index',
-                        'href' => '/policies',
-                    ],
-                    [
-                        'label' => 'Resource Policies',
-                        'icon' => 'link',
-                        'route' => 'resource-policies.index',
-                        'href' => '/resource-policies',
-                    ],
-                    [
-                        'label' => 'Assessment Resources',
-                        'icon' => 'book-open',
-                        'route' => 'assessment-resources.index',
-                        'href' => '/assessment-resources',
-                    ],
-                    [
-                        'label' => 'Resources',
-                        'icon' => 'folder',
-                        'route' => 'resources.index',
-                        'href' => '/resources',
-                    ],
-                ],
-            ],
-            [
-                'label' => 'Question Settings',
-                'type' => 'group',
-                'items' => [
-                    [
-                        'label' => 'Cycles',
-                        'icon' => 'refresh-cw',
-                        'route' => 'question-cycles.index',
-                        'href' => '/question-cycles',
-                    ],
-                    [
-                        'label' => 'Grades',
-                        'icon' => 'bar-chart',
-                        'route' => 'question-grades.index',
-                        'href' => '/question-grades',
-                    ],
-                    [
-                        'label' => 'Subjects',
-                        'icon' => 'book',
-                        'route' => 'question-subjects.index',
-                        'href' => '/question-subjects',
-                    ],
-                    [
-                        'label' => 'Types',
-                        'icon' => 'tag',
-                        'route' => 'question-types.index',
-                        'href' => '/question-types',
-                    ],
-                ],
-            ],
-        ];
+                'items' => $items->map(fn ($item) => [
+                    'label' => $item->description,
+                    'icon' => 'fas fa-circle',
+                    'href' => '/'.str()->of($item->res_url)->trim()->toString(),
+                ])->values()->all(),
+            ])
+            ->values()
+            ->all();
     }
 }
