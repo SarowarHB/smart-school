@@ -1,0 +1,142 @@
+<script>
+  import { useForm, router } from '@inertiajs/svelte';
+  import AppLayout from '../../Layouts/AppLayout.svelte';
+
+  let { grades } = $props();
+
+  let deleteTarget = $state(null);
+  function confirmDelete(item) { deleteTarget = item; }
+  function cancelDelete()      { deleteTarget = null; }
+  function doDelete() {
+    if (!deleteTarget) return;
+    router.delete(`/question-grades/${deleteTarget.id}`, { onSuccess: () => { deleteTarget = null; } });
+  }
+
+  let modalMode   = $state(null);
+  let editingItem = $state(null);
+  const form = useForm({ name: '', description: '' });
+
+  function openCreate() { form.reset(); form.clearErrors(); modalMode = 'create'; editingItem = null; }
+  function openEdit(item) { form.name = item.name; form.description = item.description ?? ''; form.clearErrors(); modalMode = 'edit'; editingItem = item; }
+  function closeModal() { form.reset(); form.clearErrors(); modalMode = null; editingItem = null; }
+  function submitForm(e) {
+    e.preventDefault();
+    if (modalMode === 'create') form.post('/question-grades', { onSuccess: () => closeModal() });
+    else if (modalMode === 'edit' && editingItem) form.put(`/question-grades/${editingItem.id}`, { onSuccess: () => closeModal() });
+  }
+</script>
+
+<svelte:head><title>Question Grades | SvelteAdmin</title></svelte:head>
+
+<AppLayout>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Question Grades</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{grades.total} record{grades.total === 1 ? '' : 's'} total</p>
+    </div>
+    <button onclick={openCreate} class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Grade
+    </button>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide w-16">#</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Name</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Description</th>
+            <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide w-32">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
+          {#each grades.data as item, index}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+              <td class="px-6 py-4 text-gray-400 dark:text-gray-500 font-mono text-xs">{index + 1}</td>
+              <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{item.name}</td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{item.description ?? '—'}</td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-end gap-2">
+                  <button onclick={() => openEdit(item)} class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 dark:hover:text-primary-400 transition-colors" title="Edit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onclick={() => confirmDelete(item)} class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors" title="Delete">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {:else}
+            <tr><td colspan="4" class="px-6 py-16 text-center text-gray-400 dark:text-gray-500">No grades found. <button onclick={openCreate} class="text-primary-500 hover:underline">Create one.</button></td></tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+    {#if grades.last_page > 1}
+      <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Showing {grades.from}–{grades.to} of {grades.total}</p>
+        <div class="flex gap-1">
+          {#each grades.links as link}
+            {#if link.url}
+              <button onclick={() => router.visit(link.url)} class="px-3 py-1.5 text-xs rounded-lg transition-colors {link.active ? 'bg-primary-600 text-white font-semibold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}" disabled={link.active}>{@html link.label}</button>
+            {:else}
+              <span class="px-3 py-1.5 text-xs text-gray-300 dark:text-gray-600 cursor-not-allowed">{@html link.label}</span>
+            {/if}
+          {/each}
+        </div>
+      </div>
+    {/if}
+  </div>
+</AppLayout>
+
+{#if deleteTarget}
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={cancelDelete} onkeydown={(e) => e.key === 'Escape' && cancelDelete()} role="button" tabindex="-1" aria-label="Close"></div>
+    <div class="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700 z-10">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Delete Grade</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone.</p>
+        </div>
+      </div>
+      <p class="text-sm text-gray-700 dark:text-gray-300 mb-6">Are you sure you want to delete <strong class="text-gray-900 dark:text-white">"{deleteTarget.name}"</strong>?</p>
+      <div class="flex gap-3">
+        <button onclick={cancelDelete} class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
+        <button onclick={doDelete} class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors">Delete</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if modalMode}
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} role="button" tabindex="-1" aria-label="Close"></div>
+    <div class="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700 z-10">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-5">{modalMode === 'create' ? 'Create Grade' : 'Edit Grade'}</h3>
+      <form onsubmit={submitForm} novalidate class="space-y-4">
+        <div>
+          <label for="modal-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Name <span class="text-red-500">*</span></label>
+          <input id="modal-name" type="text" bind:value={form.name} placeholder="Grade name" class="w-full px-4 py-2.5 rounded-xl border text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/40 {form.errors.name ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-700 focus:border-primary-500'}" />
+          {#if form.errors.name}<p class="mt-1.5 text-xs text-red-500">{form.errors.name}</p>{/if}
+        </div>
+        <div>
+          <label for="modal-desc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Description</label>
+          <input id="modal-desc" type="text" bind:value={form.description} placeholder="Optional description" class="w-full px-4 py-2.5 rounded-xl border text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/40 {form.errors.description ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-700 focus:border-primary-500'}" />
+          {#if form.errors.description}<p class="mt-1.5 text-xs text-red-500">{form.errors.description}</p>{/if}
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button onclick={closeModal} type="button" class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
+          <button type="submit" disabled={form.processing} class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+            {#if form.processing}<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4z"/></svg>{/if}
+            {modalMode === 'create' ? 'Create Grade' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{/if}

@@ -72,6 +72,36 @@ class SidebarComposer
                     ],
                 ],
             ],
+            [
+                'label' => 'Question Settings',
+                'type' => 'group',
+                'items' => [
+                    [
+                        'label' => 'Cycles',
+                        'icon' => 'refresh-cw',
+                        'route' => 'question-cycles.index',
+                        'href' => '/question-cycles',
+                    ],
+                    [
+                        'label' => 'Grades',
+                        'icon' => 'bar-chart',
+                        'route' => 'question-grades.index',
+                        'href' => '/question-grades',
+                    ],
+                    [
+                        'label' => 'Subjects',
+                        'icon' => 'book',
+                        'route' => 'question-subjects.index',
+                        'href' => '/question-subjects',
+                    ],
+                    [
+                        'label' => 'Types',
+                        'icon' => 'tag',
+                        'route' => 'question-types.index',
+                        'href' => '/question-types',
+                    ],
+                ],
+            ],
         ];
     }
 }
