@@ -1,58 +1,137 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Smart School
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A school management platform built with **Laravel 13**, **Inertia.js v3**, and **Svelte 5**. It handles roles, courses, classes, assessments, grading, announcements, and more.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend:** PHP 8.3, Laravel 13
+- **Frontend:** Svelte 5, Inertia.js v3
+- **Styling:** Tailwind CSS v4
+- **Database:** SQLite (default) / MySQL
+- **Auth:** Session-based + Laravel Socialite (Google OAuth)
+- **Testing:** PHPUnit 12
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3+
+- Composer
+- Node.js 20+ & npm
+- SQLite (default) or a MySQL/PostgreSQL database
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 1. Clone the repository
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repository-url>
+cd smart-school
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. One-command setup
 
-## Contributing
+```bash
+composer run setup
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+This runs: `composer install` → copy `.env` → generate app key → run migrations → `npm install` → `npm run build`.
 
-## Code of Conduct
+### 3. Manual setup (alternative)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm install
+npm run build
+```
 
-## Security Vulnerabilities
+## Configuration
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Edit `.env` to configure your environment. Key variables:
 
-## License
+```env
+APP_NAME="Smart School"
+APP_URL=http://localhost
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Database (SQLite by default — no extra config needed)
+DB_CONNECTION=sqlite
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
+```
+
+## Running the Application
+
+### Development (all services in one command)
+
+```bash
+composer run dev
+```
+
+This starts concurrently:
+- `php artisan serve` — Laravel dev server at `http://localhost:8000`
+- `npm run dev` — Vite HMR frontend bundler
+- `php artisan queue:listen` — Background job processor
+- `php artisan pail` — Real-time log viewer
+
+### Production build
+
+```bash
+npm run build
+php artisan serve
+```
+
+## Testing
+
+```bash
+# Run all tests
+composer run test
+
+# Or directly via Artisan
+php artisan test --compact
+
+# Run a specific test file
+php artisan test --compact tests/Feature/RoleTest.php
+
+# Filter by test name
+php artisan test --compact --filter=testName
+```
+
+## Key Features
+
+- **Role management** — Create, assign, and manage user roles
+- **Courses & Classes** — Organise subjects, class rooms, and periods
+- **Assessments & Grading** — Questions, marking periods, grade tracking
+- **Announcements & Posts** — School-wide and group-scoped content
+- **Google OAuth** — Sign in with Google via Laravel Socialite
+- **Invitations** — Invite teachers and students to the platform
+
+## Project Structure
+
+```
+app/
+├── Http/Controllers/   # Request handlers
+├── Models/             # Eloquent models
+resources/
+├── js/
+│   ├── Pages/          # Inertia/Svelte page components
+│   └── Components/     # Reusable Svelte components
+database/
+├── migrations/         # Database schema
+├── factories/          # Model factories for testing
+└── seeders/            # Database seeders
+tests/
+├── Feature/            # Feature (HTTP) tests
+└── Unit/               # Unit tests
+```
+
+## Code Quality
+
+Run Pint to auto-format PHP code:
+
+```bash
+vendor/bin/pint --dirty
+```

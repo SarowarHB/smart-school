@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[WithoutTimestamps]
 
-#[Fillable(['name', 'description', 'res_url', 'question_id'])]
+#[Fillable(['name', 'description', 'res_url'])]
 class Resource extends Model
 {
     public function resourcesPolicies(): HasMany
