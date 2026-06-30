@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use App\Models\Account\Role as AccountRole;
+use App\Models\Account\Account;
+use App\Models\Resource\Resource;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Table('roles')]
 
@@ -16,13 +17,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['name'])]
 class Role extends Model
 {
-    public function accountRoles(): HasMany
+    public function accounts(): BelongsToMany
     {
-        return $this->hasMany(AccountRole::class, 'role_id', 'id');
+        return $this->belongsToMany(Account::class, 'account_roles', 'role_id', 'account_id')
+            ->withPivot('is_active');
     }
 
-    public function policies(): HasMany
+    public function resources(): BelongsToMany
     {
-        return $this->hasMany(Policy::class, 'role_id', 'id');
+        return $this->belongsToMany(Resource::class, 'role_resources', 'role_id', 'resource_id');
     }
 }

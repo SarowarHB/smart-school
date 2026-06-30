@@ -1,17 +1,15 @@
 <?php
 
-use App\Http\Controllers\ActionController;
 use App\Http\Controllers\AssessmentResourceController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleController;
-use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\QuestionCycleController;
 use App\Http\Controllers\QuestionGradeController;
 use App\Http\Controllers\QuestionSubjectController;
 use App\Http\Controllers\QuestionTypeController;
 use App\Http\Controllers\ResourceController;
-use App\Http\Controllers\ResourcePolicyController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\RoleResourceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -34,9 +32,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('Dashboard/Index'))->name('dashboard');
 
     Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
-    Route::resource('actions', ActionController::class)->except(['show', 'create', 'edit']);
-    Route::resource('policies', PolicyController::class)->except(['show', 'create', 'edit']);
-    Route::resource('resource-policies', ResourcePolicyController::class)->except(['show', 'create', 'edit']);
+    Route::put('roles/{role}/resources', [RoleController::class, 'syncResources'])->name('roles.resources');
+    Route::resource('role-resources', RoleResourceController::class)->only(['index', 'store', 'destroy']);
+
     Route::resource('assessment-resources', AssessmentResourceController::class)->except(['show', 'create', 'edit']);
     Route::resource('resources', ResourceController::class)->except(['show', 'create', 'edit']);
     Route::resource('question-cycles', QuestionCycleController::class)->except(['show', 'create', 'edit']);

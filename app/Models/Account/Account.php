@@ -14,6 +14,7 @@ use App\Models\Post\Post;
 use App\Models\Profile;
 use App\Models\Reply;
 use App\Models\RequestedClass;
+use App\Models\Role;
 use App\Models\Student\ClassEnrollment;
 use App\Models\Student\Submission;
 use App\Models\Student\WorkProductLog;
@@ -89,11 +90,6 @@ class Account extends Authenticatable
     public function accountAssessments(): HasMany
     {
         return $this->hasMany(Assessment::class, 'account_id');
-    }
-
-    public function accountRoles(): HasMany
-    {
-        return $this->hasMany(Role::class, 'account_id');
     }
 
     public function accountSchools(): HasMany

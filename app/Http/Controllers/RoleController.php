@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Resource\Resource;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,10 +11,12 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::orderBy('id')->paginate(15);
+        $roles = Role::with('resources')->orderBy('id')->paginate(15);
+        $resources = Resource::orderBy('name')->get(['id', 'name', 'description']);
 
         return Inertia::render('Roles/Index', [
             'roles' => $roles,
+            'resources' => $resources,
         ]);
     }
 
@@ -51,5 +54,19 @@ class RoleController extends Controller
         return redirect()
             ->route('roles.index')
             ->with('success', "Role \"{$name}\" deleted.");
+    }
+
+    public function syncResources(Request $request, Role $role)
+    {
+        $validated = $request->validate([
+            'resource_ids' => ['present', 'array'],
+            'resource_ids.*' => ['integer', 'exists:resources,id'],
+        ]);
+
+        $role->resources()->sync($validated['resource_ids']);
+
+        return redirect()
+            ->route('roles.index')
+            ->with('success', "Resources for \"{$role->name}\" updated.");
     }
 }

@@ -2,7 +2,7 @@
   import { useForm, router } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
 
-  let { roles } = $props();
+  let { roles, resources } = $props();
 
   // ── Delete ─────────────────────────────────────────────────────────────────
   let deleteTarget = $state(null);
@@ -51,10 +51,40 @@
       form.put(`/roles/${editingRole.id}`, { onSuccess: () => closeModal() });
     }
   }
+
+  // ── Manage Resources modal ─────────────────────────────────────────────────
+  let resourcesRole   = $state(null);
+  let selectedIds     = $state([]);
+  const resourcesForm = useForm({ resource_ids: [] });
+
+  function openResources(role) {
+    resourcesRole = role;
+    selectedIds   = role.resources.map(r => r.id);
+  }
+
+  function closeResources() {
+    resourcesRole = null;
+    selectedIds   = [];
+    resourcesForm.clearErrors();
+  }
+
+  function toggleResource(id) {
+    selectedIds = selectedIds.includes(id)
+      ? selectedIds.filter(i => i !== id)
+      : [...selectedIds, id];
+  }
+
+  function saveResources(e) {
+    e.preventDefault();
+    resourcesForm.resource_ids = selectedIds;
+    resourcesForm.put(`/roles/${resourcesRole.id}/resources`, {
+      onSuccess: () => closeResources(),
+    });
+  }
 </script>
 
 <svelte:head>
-  <title>Roles | SvelteAdmin</title>
+  <title>Roles | Smart School</title>
 </svelte:head>
 
 <AppLayout>
@@ -89,7 +119,10 @@
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Role Name
             </th>
-            <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide w-32">
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              Resources
+            </th>
+            <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide w-36">
               Actions
             </th>
           </tr>
@@ -104,7 +137,32 @@
                 {role.name}
               </td>
               <td class="px-6 py-4">
+                <div class="flex flex-wrap gap-1">
+                  {#if role.resources.length > 0}
+                    {#each role.resources as resource}
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
+                                   bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300
+                                   border border-blue-100 dark:border-blue-800">
+                        {resource.description || resource.name}
+                      </span>
+                    {/each}
+                  {:else}
+                    <span class="text-xs text-gray-400 dark:text-gray-500 italic">No resources</span>
+                  {/if}
+                </div>
+              </td>
+              <td class="px-6 py-4">
                 <div class="flex items-center justify-end gap-2">
+                  <button
+                    onclick={() => openResources(role)}
+                    class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50
+                           dark:hover:bg-blue-900/20 dark:hover:text-blue-400 transition-colors"
+                    title="Manage Resources">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                  </button>
                   <button
                     onclick={() => openEdit(role)}
                     class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50
@@ -119,8 +177,7 @@
                     onclick={() => confirmDelete(role)}
                     class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50
                            dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
-                    title="Delete"
-                  >
+                    title="Delete">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <polyline points="3 6 5 6 21 6"/>
                       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -133,7 +190,7 @@
             </tr>
           {:else}
             <tr>
-              <td colspan="3" class="px-6 py-16 text-center text-gray-400 dark:text-gray-500">
+              <td colspan="4" class="px-6 py-16 text-center text-gray-400 dark:text-gray-500">
                 <div class="flex flex-col items-center gap-2">
                   <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="3"/>
@@ -163,8 +220,7 @@
                        {link.active
                          ? 'bg-primary-600 text-white font-semibold'
                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-                disabled={link.active}
-              >
+                disabled={link.active}>
                 {@html link.label}
               </button>
             {:else}
@@ -188,8 +244,8 @@
       onkeydown={(e) => e.key === 'Escape' && cancelDelete()}
       role="button"
       tabindex="-1"
-      aria-label="Close"
-    ></div>
+      aria-label="Close">
+    </div>
     <div class="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6
                 border border-gray-200 dark:border-gray-700 z-10">
       <div class="flex items-center gap-3 mb-4">
@@ -213,15 +269,13 @@
           onclick={cancelDelete}
           class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200
                  dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50
-                 dark:hover:bg-gray-800 transition-colors"
-        >
+                 dark:hover:bg-gray-800 transition-colors">
           Cancel
         </button>
         <button
           onclick={doDelete}
           class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl bg-red-600 hover:bg-red-700
-                 text-white transition-colors"
-        >
+                 text-white transition-colors">
           Delete
         </button>
       </div>
@@ -238,8 +292,8 @@
       onkeydown={(e) => e.key === 'Escape' && closeModal()}
       role="button"
       tabindex="-1"
-      aria-label="Close"
-    ></div>
+      aria-label="Close">
+    </div>
     <div class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6
                 border border-gray-200 dark:border-gray-700 z-10">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-5">
@@ -277,8 +331,7 @@
             type="button"
             class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200
                    dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50
-                   dark:hover:bg-gray-800 transition-colors"
-          >
+                   dark:hover:bg-gray-800 transition-colors">
             Cancel
           </button>
           <button
@@ -286,8 +339,7 @@
             disabled={form.processing}
             class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700
                    disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium
-                   rounded-xl transition-colors shadow-sm"
-          >
+                   rounded-xl transition-colors shadow-sm">
             {#if form.processing}
               <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -295,6 +347,87 @@
               </svg>
             {/if}
             {modalMode === 'create' ? 'Create Role' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{/if}
+
+<!-- Manage Resources modal -->
+{#if resourcesRole}
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      onclick={closeResources}
+      onkeydown={(e) => e.key === 'Escape' && closeResources()}
+      role="button"
+      tabindex="-1"
+      aria-label="Close">
+    </div>
+    <div class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6
+                border border-gray-200 dark:border-gray-700 z-10">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+        Manage Resources
+      </h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+        Role: <strong class="text-gray-700 dark:text-gray-300">{resourcesRole.name}</strong>
+      </p>
+
+      <form onsubmit={saveResources} novalidate>
+        <div class="space-y-2 max-h-72 overflow-y-auto pr-1 mb-5">
+          {#if resources.length > 0}
+            {#each resources as resource}
+              <label
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors
+                       {selectedIds.includes(resource.id)
+                         ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700'
+                         : 'border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/40'}">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(resource.id)}
+                  onchange={() => toggleResource(resource.id)}
+                  class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {resource.description || resource.name}
+                  </p>
+                  {#if resource.description}
+                    <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{resource.name}</p>
+                  {/if}
+                </div>
+              </label>
+            {/each}
+          {:else}
+            <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
+              No resources available. Add resources first.
+            </p>
+          {/if}
+        </div>
+
+        <div class="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+          <button
+            onclick={closeResources}
+            type="button"
+            class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200
+                   dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50
+                   dark:hover:bg-gray-800 transition-colors">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={resourcesForm.processing}
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700
+                   disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium
+                   rounded-xl transition-colors shadow-sm">
+            {#if resourcesForm.processing}
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4z"/>
+              </svg>
+            {/if}
+            Save Resources
           </button>
         </div>
       </form>
